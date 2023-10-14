@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 output: github_document
 ---
 
-```{r, warning=FALSE, echo=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(ggplot2)
 library(patchwork)
@@ -73,7 +73,7 @@ instacart |>
 
 Do some data cleaning for the `BRFSS` data:
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 brfss_smart2010 |>
   filter(
     Topic == "Overall Health",
@@ -148,7 +148,7 @@ From the two-panel plot, we can see that the BRFSS data of different responses a
 ## Problem 3
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # this step exclude participants less than 21 years of age, and those with missing demographic data
 nhanes_covar =
   read_csv("./data/nhanes_covar.csv", skip=4) |>
@@ -178,9 +178,8 @@ nhanes_accel =
    mutate(seqn = as.character(seqn))
 ```
 
-
+```{r, warning=FALSE, message=FALSE}
 # this steps merges the two tables together
-```{r}
 merge_df =
   left_join(nhanes_covar, nhanes_accel, by = "seqn") |>
   pivot_longer(min1:min1440,
@@ -190,7 +189,7 @@ merge_df =
 
 ### Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # this step produces the table
 nhanes_covar |>
   group_by(sex, education) |>
@@ -209,7 +208,7 @@ merge_df |>
 
 This plot shows that the average age is larger for female receiving an education level of high school equivalent, while those who receive an education level of more than high school tend to be younger.
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 merge_df =
   merge_df |>
   group_by(seqn) |>
@@ -223,12 +222,16 @@ ggplot(data=merge_df, aes(x=age,y=total_activity, color=sex)) +
 ```
 The figure shows that in general, men have a lower value of accelerometer data than women when they receive high school education at least, while men's data values is higher than women in the group of "Less than High School". For all three groups of education, the data value has a decreasing trend when both men and women's age increase.
 
-```{r}
-ggplot(data=merge_df, aes(x=total_activity, fill=sex)) +
-  geom_density(alpha=.5) +
+```{r, warning=FALSE, message=FALSE}
+merge_df |>
+  mutate(min_numeric = as.numeric(substring(min,4))) |>
+  ggplot(aes(x=min_numeric, y=`accelerometer data`, color=sex)) +
+  geom_point() + 
+  geom_smooth() +
   facet_grid(~education) + 
   viridis::scale_fill_viridis(discrete = TRUE) +
-  labs(title="24-hour Activity Time Courses of Data across Education and Sex Groups")
+  labs(title="24-hour Activity Time Courses of Data across Education and Sex Groups",
+       x="minute of a day")
 ```
 
-The three-panel plot shows that the 24-hour activity time courses of the accelerometer data centers around the range of (10000, 15000) for each education and sex group. Specifically, female's data values has a more centralized focus than male in the group of "More than High School".
+The three-panel plot shows that the 24-hour activity time courses of the accelerometer data centers around the range of (0, 25) for each education and sex group. Specifically, female's data values has a more centralized focus than male in the group of "More than High School".
